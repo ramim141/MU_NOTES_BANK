@@ -1,0 +1,47 @@
+{% extends 'notes/base.html' %}
+
+{% block title %}Notifications - Note Sharing{% endblock %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-8 dark:text-white">Notifications</h1>
+    <div class="space-y-4">
+        {% for notification in notifications %}
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md {% if not notification.is_read %}border-l-4 border-blue-500{% endif %}">
+                <p class="dark:text-white">{{ notification.content }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">{{ notification.created_at|date:"F j, Y H:i" }}</p>
+                {% if not notification.is_read %}
+                    <button class="mark-as-read mt-2 text-blue-600 dark:text-blue-400 hover:underline" data-id="{{ notification.id }}">
+                        Mark as read
+                    </button>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="text-center text-gray-600 dark:text-gray-400">No notifications.</p>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.mark-as-read').forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationId = this.dataset.id;
+            fetch(`/notification/${notificationId}/mark-as-read/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    this.parentElement.classList.remove('border-l-4', 'border-blue-500');
+                    this.remove();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+

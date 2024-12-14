@@ -1,0 +1,16 @@
+{% extends 'notes/base.html' %}
+
+{% block title %}Delete Note - Note Sharing{% endblock %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-8 dark:text-white">Delete Note</h1>
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <p class="mb-4 dark:text-white">Are you sure you want to delete the note "{{ note.title }}"?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">Delete</button>
+            <a href="{% url 'dashboard' %}" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md ml-2 hover:bg-gray-400 transition-colors">Cancel</a>
+        </form>
+    </div>
+{% endblock %}
+

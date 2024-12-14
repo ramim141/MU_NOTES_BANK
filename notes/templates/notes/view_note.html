@@ -1,0 +1,74 @@
+{% extends 'notes/base.html' %}
+
+{% block title %}{{ note.title }} - Note Sharing{% endblock %}
+
+{% block content %}
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h1 class="text-3xl font-bold mb-4 dark:text-white">{{ note.title }}</h1>
+        <div class="prose dark:prose-invert max-w-none mb-4">{{ note.content|safe }}</div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            Created by {{ note.author.username }} on {{ note.created_at|date:"F j, Y" }}
+        </p>
+        <div class="flex items-center mt-4">
+            <button id="like-button" class="bg-blue-500 text-white px-4 py-2 rounded-md mr-4" data-note-id="{{ note.id }}">
+                Like (<span id="like-count">{{ note.likes.count }}</span>)
+            </button>
+            <span class="text-gray-600 dark:text-gray-400">Views: {{ note.views }}</span>
+        </div>
+        {% if user == note.author %}
+            <div class="mt-4">
+                <a href="{% url 'edit_note' note.id %}" class="text-blue-600 dark:text-blue-400 hover:underline mr-4">Edit</a>
+                <a href="{% url 'delete_note' note.id %}" class="text-red-600 dark:text-red-400 hover:underline mr-4">Delete</a>
+                <a href="{% url 'export_note' note.id %}" class="text-green-600 dark:text-green-400 hover:underline">Export as PDF</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold mb-4 dark:text-white">Comments</h2>
+        {% for comment in comments %}
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4">
+                <p class="mb-2 dark:text-white">{{ comment.content }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    By {{ comment.author.username }} on {{ comment.created_at|date:"F j, Y" }}
+                </p>
+            </div>
+        {% empty %}
+            <p class="text-gray-600 dark:text-gray-400">No comments yet.</p>
+        {% endfor %}
+
+        {% if user.is_authenticated %}
+            <form method="post" class="mt-6">
+                {% csrf_token %}
+                {{ comment_form.as_p }}
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors mt-2">
+                    Add Comment
+                </button>
+            </form>
+        {% else %}
+            <p class="mt-6 text-gray-600 dark:text-gray-400">Please <a href="{% url 'login' %}" class="text-blue-600 dark:text-blue-400 hover:underline">log in</a> to add a comment.</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('like-button').addEventListener('click', function() {
+        const noteId = this.dataset.noteId;
+        fetch(`/note/${noteId}/like/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('like-count').textContent = data.likes;
+            this.classList.toggle('bg-blue-500');
+            this.classList.toggle('bg-red-500');
+        });
+    });
+</script>
+{% endblock %}
+
